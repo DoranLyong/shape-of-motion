@@ -241,6 +241,8 @@ def init_model_from_tracks(
     guru.info(f"{cano_t=} {num_fg=} {num_bg=} {num_motion_bases=}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    tracks_3d = tracks_3d.to(device)
+
     motion_bases, motion_coefs, tracks_3d = init_motion_params_with_procrustes(
         tracks_3d, num_motion_bases, rot_type, cano_t, vis=vis, port=port
     )
