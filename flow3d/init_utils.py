@@ -539,7 +539,10 @@ def sample_initial_bases_centers(
     :param num_bases: number of SE3 bases
     """
     assert mode in ["farthest", "hdbscan", "kmeans"]
-    means_canonical = tracks_3d.xyz[:, cano_t].clone()
+    means_canonical = tracks_3d.xyz[:, cano_t].clone() # -- on CPU to copy to CuPy.
+    device = means_canonical.device 
+    
+    
     # if mode == "farthest":
     #     vis_mask = tracks_3d.visibles[:, cano_t]
     #     sampled_centers, _ = sample_farthest_points(
@@ -578,14 +581,17 @@ def sample_initial_bases_centers(
         model = HDBSCAN(min_cluster_size=20, max_cluster_size=num_tracks // 4)
     model.fit(vel_dirs)
     labels = model.labels_
+
     num_bases = labels.max().item() + 1
     sampled_centers = torch.stack(
         [
-            means_canonical[torch.tensor(labels == i)].median(dim=0).values
+            means_canonical[torch.tensor(labels == i).to(device)].median(dim=0).values
             for i in range(num_bases)
         ]
     )[None]
+
     print("number of {} clusters: ".format(mode), num_bases)
+
     return sampled_centers, num_bases, torch.tensor(labels)
 
 
